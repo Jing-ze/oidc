@@ -18,53 +18,26 @@ type SignatureData struct {
 // Options holds Configuration Options that can be set by Command Line Flag,
 // or Config File
 type Options struct {
-	ProxyPrefix         string   `flag:"proxy-prefix" cfg:"proxy_prefix"`
-	PingPath            string   `flag:"ping-path" cfg:"ping_path"`
-	PingUserAgent       string   `flag:"ping-user-agent" cfg:"ping_user_agent"`
-	ReadyPath           string   `flag:"ready-path" cfg:"ready_path"`
-	ReverseProxy        bool     `flag:"reverse-proxy" cfg:"reverse_proxy"`
-	RealClientIPHeader  string   `flag:"real-client-ip-header" cfg:"real_client_ip_header"`
-	TrustedIPs          []string `flag:"trusted-ip" cfg:"trusted_ips"`
-	ForceHTTPS          bool     `flag:"force-https" cfg:"force_https"`
-	RawRedirectURL      string   `flag:"redirect-url" cfg:"redirect_url"`
-	RelativeRedirectURL bool     `flag:"relative-redirect-url" cfg:"relative_redirect_url"`
+	ProxyPrefix         string `flag:"proxy-prefix" cfg:"proxy_prefix"`
+	ReverseProxy        bool   `flag:"reverse-proxy" cfg:"reverse_proxy"`
+	RealClientIPHeader  string `flag:"real-client-ip-header" cfg:"real_client_ip_header"`
+	RawRedirectURL      string `flag:"redirect-url" cfg:"redirect_url"`
+	RelativeRedirectURL bool   `flag:"relative-redirect-url" cfg:"relative_redirect_url"`
 
 	AuthenticatedEmailsFile string   `flag:"authenticated-emails-file" cfg:"authenticated_emails_file"`
 	EmailDomains            []string `flag:"email-domain" cfg:"email_domains"`
 	WhitelistDomains        []string `flag:"whitelist-domain" cfg:"whitelist_domains"`
-	HtpasswdFile            string   `flag:"htpasswd-file" cfg:"htpasswd_file"`
-	HtpasswdUserGroups      []string `flag:"htpasswd-user-group" cfg:"htpasswd_user_groups"`
 
 	Cookie  Cookie         `cfg:",squash"`
 	Session SessionOptions `cfg:",squash"`
-	// Logging   Logging        `cfg:",squash"`
-	Templates Templates `cfg:",squash"`
-
-	// Not used in the legacy config, name not allowed to match an external key (upstreams)
-	// TODO(JoelSpeed): Rename when legacy config is removed
-	// UpstreamServers UpstreamConfig `cfg:",internal"`
-
-	InjectRequestHeaders  []Header `cfg:",internal"`
-	InjectResponseHeaders []Header `cfg:",internal"`
-
-	// Server        Server `cfg:",internal"`
-	// MetricsServer Server `cfg:",internal"`
 
 	Providers Providers `cfg:",internal"`
 
-	APIRoutes             []string `flag:"api-route" cfg:"api_routes"`
-	SkipAuthRegex         []string `flag:"skip-auth-regex" cfg:"skip_auth_regex"`
-	SkipAuthRoutes        []string `flag:"skip-auth-route" cfg:"skip_auth_routes"`
-	SkipJwtBearerTokens   bool     `flag:"skip-jwt-bearer-tokens" cfg:"skip_jwt_bearer_tokens"`
-	ExtraJwtIssuers       []string `flag:"extra-jwt-issuers" cfg:"extra_jwt_issuers"`
-	SkipProviderButton    bool     `flag:"skip-provider-button" cfg:"skip_provider_button"`
-	SSLInsecureSkipVerify bool     `flag:"ssl-insecure-skip-verify" cfg:"ssl_insecure_skip_verify"`
-	SkipAuthPreflight     bool     `flag:"skip-auth-preflight" cfg:"skip_auth_preflight"`
-	ForceJSONErrors       bool     `flag:"force-json-errors" cfg:"force_json_errors"`
-	EncodeState           bool     `flag:"encode-state" cfg:"encode_state"`
+	SSLInsecureSkipVerify bool `flag:"ssl-insecure-skip-verify" cfg:"ssl_insecure_skip_verify"`
+	SkipAuthPreflight     bool `flag:"skip-auth-preflight" cfg:"skip_auth_preflight"`
+	EncodeState           bool `flag:"encode-state" cfg:"encode_state"`
 
-	SignatureKey    string `flag:"signature-key" cfg:"signature_key"`
-	GCPHealthChecks bool   `flag:"gcp-healthchecks" cfg:"gcp_healthchecks"`
+	SignatureKey string `flag:"signature-key" cfg:"signature_key"`
 
 	// This is used for backwards compatibility for basic auth users
 	LegacyPreferEmailToUser bool `cfg:",internal"`
@@ -98,15 +71,10 @@ func NewOptions() *Options {
 	return &Options{
 		ProxyPrefix:        "/oauth2",
 		Providers:          providerDefaults(),
-		PingPath:           "/ping",
-		ReadyPath:          "/ready",
 		RealClientIPHeader: "X-Real-IP",
-		ForceHTTPS:         false,
 		Cookie:             cookieDefaults(),
 		Session:            sessionOptionsDefaults(),
-		Templates:          templatesDefaults(),
 		SkipAuthPreflight:  false,
-		// Logging:            loggingDefaults(),
 	}
 }
 
@@ -160,7 +128,7 @@ func NewFlagSet() *pflag.FlagSet {
 
 	flagSet.AddFlagSet(cookieFlagSet())
 	// flagSet.AddFlagSet(loggingFlagSet())
-	flagSet.AddFlagSet(templatesFlagSet())
+	// flagSet.AddFlagSet(templatesFlagSet())
 
 	return flagSet
 }

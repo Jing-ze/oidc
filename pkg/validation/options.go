@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -11,7 +10,6 @@ import (
 	"github.com/mbland/hmacauth"
 	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/ip"
 	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/logger"
-	internaloidc "github.com/oauth2-proxy/oauth2-proxy/v7/pkg/providers/oidc"
 	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/util"
 	"oidc/pkg/apis/options"
 )
@@ -43,28 +41,9 @@ func Validate(o *options.Options) error {
 		}
 	}
 
-	if o.AuthenticatedEmailsFile == "" && len(o.EmailDomains) == 0 && o.HtpasswdFile == "" {
+	if o.AuthenticatedEmailsFile == "" && len(o.EmailDomains) == 0 {
 		msgs = append(msgs, "missing setting for email validation: email-domain or authenticated-emails-file required."+
 			"\n      use email-domain=* to authorize all email addresses")
-	}
-
-	if o.SkipJwtBearerTokens {
-		// Configure extra issuers
-		if len(o.ExtraJwtIssuers) > 0 {
-			var jwtIssuers []jwtIssuer
-			jwtIssuers, msgs = parseJwtIssuers(o.ExtraJwtIssuers, msgs)
-			for _, jwtIssuer := range jwtIssuers {
-				verifier, err := newVerifierFromJwtIssuer(
-					o.Providers[0].OIDCConfig.AudienceClaims,
-					o.Providers[0].OIDCConfig.ExtraAudiences,
-					jwtIssuer,
-				)
-				if err != nil {
-					msgs = append(msgs, fmt.Sprintf("error building verifiers: %s", err))
-				}
-				o.SetJWTBearerVerifiers(append(o.GetJWTBearerVerifiers(), verifier))
-			}
-		}
 	}
 
 	var redirectURL *url.URL
@@ -114,53 +93,6 @@ func parseSignatureKey(o *options.Options, msgs []string) []string {
 	}
 	o.SetSignatureData(&options.SignatureData{Hash: hash, Key: secretKey})
 	return msgs
-}
-
-// parseJwtIssuers takes in an array of strings in the form of issuer=audience
-// and parses to an array of jwtIssuer structs.
-func parseJwtIssuers(issuers []string, msgs []string) ([]jwtIssuer, []string) {
-	parsedIssuers := make([]jwtIssuer, 0, len(issuers))
-	for _, jwtVerifier := range issuers {
-		components := strings.Split(jwtVerifier, "=")
-		if len(components) < 2 {
-			msgs = append(msgs, fmt.Sprintf("invalid jwt verifier uri=audience spec: %s", jwtVerifier))
-			continue
-		}
-		uri, audience := components[0], strings.Join(components[1:], "=")
-		parsedIssuers = append(parsedIssuers, jwtIssuer{issuerURI: uri, audience: audience})
-	}
-	return parsedIssuers, msgs
-}
-
-// newVerifierFromJwtIssuer takes in issuer information in jwtIssuer info and returns
-// a verifier for that issuer.
-func newVerifierFromJwtIssuer(audienceClaims []string, extraAudiences []string, jwtIssuer jwtIssuer) (internaloidc.IDTokenVerifier, error) {
-	pvOpts := internaloidc.ProviderVerifierOptions{
-		AudienceClaims: audienceClaims,
-		ClientID:       jwtIssuer.audience,
-		ExtraAudiences: extraAudiences,
-		IssuerURL:      jwtIssuer.issuerURI,
-	}
-
-	pv, err := internaloidc.NewProviderVerifier(context.TODO(), pvOpts)
-	if err != nil {
-		// If the discovery didn't work, try again without discovery
-		pvOpts.JWKsURL = strings.TrimSuffix(jwtIssuer.issuerURI, "/") + "/.well-known/jwks.json"
-		pvOpts.SkipDiscovery = true
-
-		pv, err = internaloidc.NewProviderVerifier(context.TODO(), pvOpts)
-		if err != nil {
-			return nil, fmt.Errorf("could not construct provider verifier for JWT Issuer: %v", err)
-		}
-	}
-
-	return pv.Verifier(), nil
-}
-
-// jwtIssuer hold parsed JWT issuer info that's used to construct a verifier.
-type jwtIssuer struct {
-	issuerURI string
-	audience  string
 }
 
 func parseURL(toParse string, urltype string, msgs []string) (*url.URL, []string) {
