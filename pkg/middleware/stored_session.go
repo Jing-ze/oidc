@@ -9,9 +9,9 @@ import (
 
 	"github.com/justinas/alice"
 	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/logger"
-	"github.com/oauth2-proxy/oauth2-proxy/v7/providers"
 	middlewareapi "oidc/pkg/apis/middleware"
 	sessionsapi "oidc/pkg/apis/sessions"
+	"oidc/providers"
 )
 
 const (
@@ -31,7 +31,7 @@ const (
 	sessionRefreshRetryPeriod = 10 * time.Millisecond
 )
 
-// StoredSessionLoaderOptions contains all of the requirements to construct
+// StoredSessionLoaderOptions contains all the requirements to construct
 // a stored session loader.
 // All options must be provided.
 type StoredSessionLoaderOptions struct {
@@ -45,7 +45,7 @@ type StoredSessionLoaderOptions struct {
 	RefreshSession func(context.Context, *sessionsapi.SessionState) (bool, error)
 
 	// Provider based session validation.
-	// If the sesssion is older than `RefreshPeriod` but the provider doesn't
+	// If the session is older than `RefreshPeriod` but the provider doesn't
 	// refresh it, we must re-validate using this validation.
 	ValidateSession func(context.Context, *sessionsapi.SessionState) bool
 }
@@ -105,7 +105,7 @@ func (s *storedSessionLoader) loadSession(next http.Handler) http.Handler {
 }
 
 // getValidatedSession is responsible for loading a session and making sure
-// that is is valid.
+// that is valid.
 func (s *storedSessionLoader) getValidatedSession(rw http.ResponseWriter, req *http.Request) (*sessionsapi.SessionState, error) {
 	session, err := s.store.Load(req)
 	if err != nil || session == nil {
@@ -171,7 +171,7 @@ func (s *storedSessionLoader) refreshSessionIfNeeded(rw http.ResponseWriter, req
 		return errors.New("session no longer exists, it may have been removed by another request")
 	}
 	// Restore the state of the fresh session into the original pointer.
-	// This is important so that changes are passed up the to the parent scope.
+	// This is important so that changes are passed up to the parent scope.
 	lock := session.Lock
 	*session = *freshSession
 
@@ -240,7 +240,7 @@ func (s *storedSessionLoader) refreshSession(rw http.ResponseWriter, req *http.R
 
 // validateSession checks whether the session has expired and performs
 // provider validation on the session.
-// An error implies the session is not longer valid.
+// An error implies the session is no longer valid.
 func (s *storedSessionLoader) validateSession(ctx context.Context, session *sessionsapi.SessionState) error {
 	if session.IsExpired() {
 		return errors.New("session is expired")

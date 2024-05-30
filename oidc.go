@@ -60,7 +60,6 @@ type OAuthProxy struct {
 	realClientIPParser  ipapi.RealClientIPParser
 
 	sessionChain alice.Chain
-	headersChain alice.Chain
 	preAuthChain alice.Chain
 
 	serveMux          *mux.Router
@@ -100,10 +99,6 @@ func NewOAuthProxy(opts *options.Options, validator func(string) bool) (*OAuthPr
 		return nil, fmt.Errorf("could not build pre-auth chain: %v", err)
 	}
 	sessionChain := buildSessionChain(opts, provider, sessionStore)
-	headersChain, err := buildHeadersChain(opts)
-	if err != nil {
-		return nil, fmt.Errorf("could not build headers chain: %v", err)
-	}
 
 	redirectValidator := redirect.NewValidator(opts.WhitelistDomains)
 	appDirector := redirect.NewAppDirector(redirect.AppDirectorOpts{
@@ -125,7 +120,6 @@ func NewOAuthProxy(opts *options.Options, validator func(string) bool) (*OAuthPr
 		realClientIPParser:  opts.GetRealClientIPParser(),
 
 		sessionChain: sessionChain,
-		headersChain: headersChain,
 		preAuthChain: preAuthChain,
 
 		redirectValidator: redirectValidator,
@@ -180,20 +174,6 @@ func buildSessionChain(opts *options.Options, provider providers.Provider, sessi
 	}))
 
 	return chain
-}
-
-func buildHeadersChain(opts *options.Options) (alice.Chain, error) {
-	requestInjector, err := middleware.NewRequestHeaderInjector(opts.InjectRequestHeaders)
-	if err != nil {
-		return alice.Chain{}, fmt.Errorf("error constructing request header injector: %v", err)
-	}
-
-	responseInjector, err := middleware.NewResponseHeaderInjector(opts.InjectResponseHeaders)
-	if err != nil {
-		return alice.Chain{}, fmt.Errorf("error constructing request header injector: %v", err)
-	}
-
-	return alice.New(requestInjector, responseInjector), nil
 }
 
 // OAuthStart starts the OAuth2 authentication flow
@@ -357,8 +337,6 @@ func (p *OAuthProxy) Proxy(rw http.ResponseWriter, req *http.Request) {
 	case err == nil:
 		// we are authenticated
 		p.addHeadersForProxying(rw, session)
-		p.headersChain.Then(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
-		})).ServeHTTP(rw, req)
 		//TODO：check correct？
 	case errors.Is(err, ErrNeedsLogin):
 		// we need to send the user to a login screen
@@ -524,7 +502,7 @@ func (p *OAuthProxy) addHeadersForProxying(rw http.ResponseWriter, session *sess
 	} else {
 		rw.Header().Set("GAP-Auth", session.Email)
 	}
-}
+} // TODO: check if this is still needed
 
 func (p *OAuthProxy) redeemCode(req *http.Request, codeVerifier string) (*sessionsapi.SessionState, error) {
 	code := req.Form.Get("code")

@@ -7,7 +7,6 @@ import (
 	"github.com/tidwall/gjson"
 	"log"
 	"net/http"
-	"net/http/httptest"
 	"oidc/pkg/apis/options"
 	"oidc/pkg/validation"
 	"os"
@@ -60,17 +59,17 @@ func main() {
 		logger.Fatalf("ERROR: Failed to initialise OAuth2 Proxy: %v", err)
 	}
 
-	r := httptest.NewRequest(http.MethodGet, "/get", nil)
-
-	w := httptest.NewRecorder()
-
-	oauthproxy.serveMux.ServeHTTP(w, r)
+	//r := httptest.NewRequest(http.MethodGet, "/get", nil)
+	//
+	//w := httptest.NewRecorder()
+	//
+	//oauthproxy.serveMux.ServeHTTP(w, r)
 
 	//启动一个 http 服务器，监听在 8080 端口
-	//err = http.ListenAndServeTLS(":443", "./ca.crt", "./ca.key", oauthproxy.serveMux)
-	//if err != nil {
-	//	logger.Fatalf("ERROR: %v", err)
-	//}
+	err = http.ListenAndServeTLS(":443", "./ca.crt", "./ca.key", oauthproxy.serveMux)
+	if err != nil {
+		logger.Fatalf("ERROR: %v", err)
+	}
 
 	// wrapper.SetCtx(
 	// 	// 插件名称
