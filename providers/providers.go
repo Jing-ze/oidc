@@ -39,32 +39,32 @@ func NewProvider(providerConfig options.Provider) (Provider, error) {
 		return nil, fmt.Errorf("could not create provider data: %v", err)
 	}
 	switch providerConfig.Type {
-	case options.ADFSProvider:
-		return NewADFSProvider(providerData, providerConfig), nil
-	case options.AzureProvider:
-		return NewAzureProvider(providerData, providerConfig.AzureConfig), nil
-	case options.BitbucketProvider:
-		return NewBitbucketProvider(providerData, providerConfig.BitbucketConfig), nil
-	case options.DigitalOceanProvider:
-		return NewDigitalOceanProvider(providerData), nil
-	case options.FacebookProvider:
-		return NewFacebookProvider(providerData), nil
-	case options.GitHubProvider:
-		return NewGitHubProvider(providerData, providerConfig.GitHubConfig), nil
-	case options.GitLabProvider:
-		return NewGitLabProvider(providerData, providerConfig)
-	case options.GoogleProvider:
-		return NewGoogleProvider(providerData, providerConfig.GoogleConfig)
-	case options.KeycloakProvider:
-		return NewKeycloakProvider(providerData, providerConfig.KeycloakConfig), nil
-	case options.KeycloakOIDCProvider:
-		return NewKeycloakOIDCProvider(providerData, providerConfig), nil
-	case options.LinkedInProvider:
-		return NewLinkedInProvider(providerData), nil
-	case options.LoginGovProvider:
-		return NewLoginGovProvider(providerData, providerConfig.LoginGovConfig)
-	case options.NextCloudProvider:
-		return NewNextcloudProvider(providerData), nil
+	//case options.ADFSProvider:
+	//	return NewADFSProvider(providerData, providerConfig), nil
+	//case options.AzureProvider:
+	//	return NewAzureProvider(providerData, providerConfig.AzureConfig), nil
+	//case options.BitbucketProvider:
+	//	return NewBitbucketProvider(providerData, providerConfig.BitbucketConfig), nil
+	//case options.DigitalOceanProvider:
+	//	return NewDigitalOceanProvider(providerData), nil
+	//case options.FacebookProvider:
+	//	return NewFacebookProvider(providerData), nil
+	//case options.GitHubProvider:
+	//	return NewGitHubProvider(providerData, providerConfig.GitHubConfig), nil
+	//case options.GitLabProvider:
+	//	return NewGitLabProvider(providerData, providerConfig)
+	//case options.GoogleProvider:
+	//	return NewGoogleProvider(providerData, providerConfig.GoogleConfig)
+	//case options.KeycloakProvider:
+	//	return NewKeycloakProvider(providerData, providerConfig.KeycloakConfig), nil
+	//case options.KeycloakOIDCProvider:
+	//	return NewKeycloakOIDCProvider(providerData, providerConfig), nil
+	//case options.LinkedInProvider:
+	//	return NewLinkedInProvider(providerData), nil
+	//case options.LoginGovProvider:
+	//	return NewLoginGovProvider(providerData, providerConfig.LoginGovConfig)
+	//case options.NextCloudProvider:
+	//	return NewNextcloudProvider(providerData), nil
 	case options.OIDCProvider:
 		return NewOIDCProvider(providerData, providerConfig.OIDCConfig), nil
 	default:
