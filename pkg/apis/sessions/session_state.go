@@ -7,31 +7,32 @@ import (
 	"io"
 	"time"
 
-	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/clock"
-	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/encryption"
+	"encoding/json"
+	"oidc/pkg/clock"
+	"oidc/pkg/encryption"
+
 	"github.com/pierrec/lz4/v4"
-	"github.com/vmihailenco/msgpack/v5"
 )
 
-// SessionState is used to store information about the currently authenticated user session
+// // SessionState is used to store information about the currently authenticated user session
 type SessionState struct {
-	CreatedAt *time.Time `msgpack:"ca,omitempty"`
-	ExpiresOn *time.Time `msgpack:"eo,omitempty"`
+	CreatedAt *time.Time `json:"ca,omitempty"`
+	ExpiresOn *time.Time `json:"eo,omitempty"`
 
-	AccessToken  string `msgpack:"at,omitempty"`
-	IDToken      string `msgpack:"it,omitempty"`
-	RefreshToken string `msgpack:"rt,omitempty"`
+	AccessToken  string `json:"at,omitempty"`
+	IDToken      string `json:"it,omitempty"`
+	RefreshToken string `json:"rt,omitempty"`
 
-	Nonce []byte `msgpack:"n,omitempty"`
+	Nonce []byte `json:"n,omitempty"`
 
-	Email             string   `msgpack:"e,omitempty"`
-	User              string   `msgpack:"u,omitempty"`
-	Groups            []string `msgpack:"g,omitempty"`
-	PreferredUsername string   `msgpack:"pu,omitempty"`
+	Email             string   `json:"e,omitempty"`
+	User              string   `json:"u,omitempty"`
+	Groups            []string `json:"g,omitempty"`
+	PreferredUsername string   `json:"pu,omitempty"`
 
 	// Internal helpers, not serialized
-	Clock clock.Clock `msgpack:"-"`
-	Lock  Lock        `msgpack:"-"`
+	Clock clock.Clock `json:"-"`
+	Lock  Lock        `json:"-"`
 }
 
 func (s *SessionState) ObtainLock(ctx context.Context, expiration time.Duration) error {
@@ -160,7 +161,7 @@ func (s *SessionState) CheckNonce(hashed string) bool {
 
 // EncodeSessionState returns an encrypted, lz4 compressed, MessagePack encoded session
 func (s *SessionState) EncodeSessionState(c encryption.Cipher, compress bool) ([]byte, error) {
-	packed, err := msgpack.Marshal(s)
+	packed, err := json.Marshal(s)
 	if err != nil {
 		return nil, fmt.Errorf("error marshalling session state to msgpack: %w", err)
 	}
@@ -192,7 +193,7 @@ func DecodeSessionState(data []byte, c encryption.Cipher, compressed bool) (*Ses
 	}
 
 	var ss SessionState
-	err = msgpack.Unmarshal(packed, &ss)
+	err = json.Unmarshal(packed, &ss)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling data to session state: %w", err)
 	}
