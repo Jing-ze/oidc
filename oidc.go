@@ -20,10 +20,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
-	ipapi "github.com/oauth2-proxy/oauth2-proxy/v7/pkg/apis/ip"
 	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/app/redirect"
 	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/encryption"
-	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/ip"
 	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/logger"
 	requestutil "github.com/oauth2-proxy/oauth2-proxy/v7/pkg/requests/util"
 )
@@ -57,7 +55,6 @@ type OAuthProxy struct {
 	sessionStore        sessionsapi.SessionStore
 	ProxyPrefix         string
 	skipAuthPreflight   bool
-	realClientIPParser  ipapi.RealClientIPParser
 
 	sessionChain alice.Chain
 	preAuthChain alice.Chain
@@ -117,7 +114,6 @@ func NewOAuthProxy(opts *options.Options, validator func(string) bool) (*OAuthPr
 		relativeRedirectURL: opts.RelativeRedirectURL,
 		whitelistDomains:    opts.WhitelistDomains,
 		skipAuthPreflight:   opts.SkipAuthPreflight,
-		realClientIPParser:  opts.GetRealClientIPParser(),
 
 		sessionChain: sessionChain,
 		preAuthChain: preAuthChain,
@@ -244,7 +240,6 @@ func (p *OAuthProxy) doOAuthStart(rw http.ResponseWriter, req *http.Request, ove
 // OAuthCallback is the OAuth2 authentication flow callback that finishes the
 // OAuth2 authentication flow
 func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
-	remoteAddr := ip.GetClientString(p.realClientIPParser, req, true)
 
 	// finish the oauth cycle
 	err := req.ParseForm()
@@ -318,7 +313,7 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
 		//logger.PrintAuthf(session.Email, req, logger.AuthSuccess, "Authenticated via OAuth2: %s", session)
 		err := p.SaveSession(rw, req, session)
 		if err != nil {
-			logger.Errorf("Error saving session state for %s: %v", remoteAddr, err)
+			//logger.Errorf("Error saving session state for %s: %v", remoteAddr, err)
 			// p.ErrorPage(rw, req, http.StatusInternalServerError, err.Error())
 			return
 		}

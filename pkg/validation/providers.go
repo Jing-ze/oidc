@@ -56,40 +56,5 @@ func validateProvider(provider options.Provider, providerIDs map[string]struct{}
 		}
 	}
 
-	msgs = append(msgs, validateGoogleConfig(provider)...)
-
-	return msgs
-}
-
-func validateGoogleConfig(provider options.Provider) []string {
-	msgs := []string{}
-
-	hasGoogleGroups := len(provider.GoogleConfig.Groups) >= 1
-	hasAdminEmail := provider.GoogleConfig.AdminEmail != ""
-	hasSAJSON := provider.GoogleConfig.ServiceAccountJSON != ""
-	useADC := provider.GoogleConfig.UseApplicationDefaultCredentials
-
-	if !hasGoogleGroups && !hasAdminEmail && !hasSAJSON && !useADC {
-		return msgs
-	}
-
-	if !hasGoogleGroups {
-		msgs = append(msgs, "missing setting: google-group")
-	}
-	if !hasAdminEmail {
-		msgs = append(msgs, "missing setting: google-admin-email")
-	}
-
-	_, err := os.Stat(provider.GoogleConfig.ServiceAccountJSON)
-	if !useADC {
-		if !hasSAJSON {
-			msgs = append(msgs, "missing setting: google-service-account-json or google-use-application-default-credentials")
-		} else if err != nil {
-			msgs = append(msgs, fmt.Sprintf("Google credentials file not found: %s", provider.GoogleConfig.ServiceAccountJSON))
-		}
-	} else if hasSAJSON {
-		msgs = append(msgs, "invalid setting: can't use both google-service-account-json and google-use-application-default-credentials")
-	}
-
 	return msgs
 }

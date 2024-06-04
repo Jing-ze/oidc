@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/mbland/hmacauth"
-	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/ip"
 	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/logger"
 	"github.com/oauth2-proxy/oauth2-proxy/v7/pkg/util"
 	"oidc/pkg/apis/options"
@@ -19,7 +17,6 @@ import (
 func Validate(o *options.Options) error {
 	msgs := validateCookie(o.Cookie)
 	msgs = append(msgs, validateProviders(o)...)
-	msgs = parseSignatureKey(o, msgs)
 
 	if o.SSLInsecureSkipVerify {
 		insecureTransport := &http.Transport{
@@ -53,46 +50,11 @@ func Validate(o *options.Options) error {
 		logger.Print("WARNING: no explicit redirect URL: redirects will default to insecure HTTP")
 	}
 
-	if o.ReverseProxy {
-		parser, err := ip.GetRealClientIPParser(o.RealClientIPHeader)
-		if err != nil {
-			msgs = append(msgs, fmt.Sprintf("real_client_ip_header (%s) not accepted parameter value: %v", o.RealClientIPHeader, err))
-		}
-		o.SetRealClientIPParser(parser)
-
-		// Allow the logger to get client IPs
-		logger.SetGetClientFunc(func(r *http.Request) string {
-			return ip.GetClientString(o.GetRealClientIPParser(), r, false)
-		})
-	}
-
 	if len(msgs) != 0 {
 		return fmt.Errorf("invalid configuration:\n  %s",
 			strings.Join(msgs, "\n  "))
 	}
 	return nil
-}
-
-func parseSignatureKey(o *options.Options, msgs []string) []string {
-	if o.SignatureKey == "" {
-		return msgs
-	}
-
-	logger.Print("WARNING: `--signature-key` is deprecated. It will be removed in a future release")
-
-	components := strings.Split(o.SignatureKey, ":")
-	if len(components) != 2 {
-		return append(msgs, "invalid signature hash:key spec: "+
-			o.SignatureKey)
-	}
-
-	algorithm, secretKey := components[0], components[1]
-	hash, err := hmacauth.DigestNameToCryptoHash(algorithm)
-	if err != nil {
-		return append(msgs, "unsupported signature hash algorithm: "+o.SignatureKey)
-	}
-	o.SetSignatureData(&options.SignatureData{Hash: hash, Key: secretKey})
-	return msgs
 }
 
 func parseURL(toParse string, urltype string, msgs []string) (*url.URL, []string) {
